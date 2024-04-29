@@ -2,8 +2,6 @@
 
 #include "Pathfinding/OctreeNode.h"
 
-#include "Serialization/StaticMemoryReader.h"
-
 LLM_DEFINE_TAG(OctreeNode);
 
 OctreeNode::OctreeNode(const FVector& Pos, const float HalfSize)
@@ -147,17 +145,21 @@ TSharedPtr<OctreeNode> OctreeNode::LazyDivideAndFindNode(const bool& ThreadIsPau
 		}
 
 
-		ToReturn = ClosestUnoccupied;		
+		//ToReturn = ClosestUnoccupied;		
 
-		//if (ClosestUnoccupied.IsValid())
-		//{
-		//	ToReturn = ClosestUnoccupied;
-		//}
+		if (ClosestUnoccupied.IsValid())
+		{
+			ToReturn = ClosestUnoccupied;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Could not find a valid node to move to. Using the original node."));
+		}
 
 		//In case happen to be in a very unlucky position where everything is occupied, then just use the original inside node.
 
-		/* TODO MAJOR TODO. TEMPORARILY I AM USING PREVIOUS VALID NODES TO GET OUT OF THIS SITUATION.
-		* IF we are here this is what happened:
+		
+		/* IF we are here this is what happened:
 		* - We are NOT looking for a neighbor. AKA we are looking for a start or end node.
 		* - The node we found is OCCUPIED
 		* - All of the siblings are OCCUPIED
@@ -170,9 +172,6 @@ TSharedPtr<OctreeNode> OctreeNode::LazyDivideAndFindNode(const bool& ThreadIsPau
 		* As a solution, I will let this node pass, as current node is not required to be unoccupied (in ASTAR FN!), only the neighbors.
 		* So it will end up looking up the neighbors and finding the closest unoccupied node. Which it should have, given if the situation
 		* described above happened (bled into an empty looking space but its 'actually' occupied) as they will for sure have neighbors.
-		*
-		* However, this should not be used for neighbors, as they must be unoccupied. So, in GetNeighbor where I clean invalid pointers,
-		* I also remove occupied nodes from the list.
 		*/
 		
 
@@ -236,40 +235,4 @@ void OctreeNode::DeleteOctreeNode(TSharedPtr<OctreeNode>& Node)
 	}
 
 	Node.Reset();
-}
-
-void OctreeNode::DeleteUnusedNodes(TSharedPtr<OctreeNode>& Node, const int& MemoryOptimizerTickThreshold)
-{
-	for (auto& Child : Node->ChildrenOctreeNodes)
-	{
-		if (!Child.IsValid()) continue;
-
-		if (Child->ChildrenOctreeNodes.IsEmpty())
-		{
-			if (Child->MemoryOptimizerTick < MemoryOptimizerTickThreshold)
-			{
-				Child.Reset();
-			}
-			else
-			{
-				Child->MemoryOptimizerTick = 0;
-				Node->NodeIsInUse = true;
-			}
-		}
-		else
-		{
-			DeleteUnusedNodes(Child, MemoryOptimizerTickThreshold);
-		}
-	}
-
-	for (const auto& Child : Node->ChildrenOctreeNodes)
-	{
-		if (Child.IsValid())
-		{
-			Node->NodeIsInUse = true;
-			break;
-		}
-	}
-
-	if (!Node->NodeIsInUse) Node.Reset();
 }

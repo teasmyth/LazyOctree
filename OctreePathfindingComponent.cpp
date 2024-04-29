@@ -160,7 +160,6 @@ void UOctreePathfindingComponent::GetAStarPathAsync(const AActor* TargetActor, F
 	{
 		PreviousNextLocation = PathSmoothing(Start, TargetActor, PathfindingRunnable.Pin()->GetOutQueue());
 	}
-
 	/*
 	else
 	{
