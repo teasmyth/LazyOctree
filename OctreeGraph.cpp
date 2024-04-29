@@ -103,7 +103,7 @@ bool OctreeGraph::LazyOctreeAStar(const bool& ThreadIsPaused, const bool& Debug,
 				//Given I use root node thousands of times, making it a non const reference is not a good idea.
 				//So I will just loop through its children to clean up
 				//Because I might reset the pointer of the passed node, I cant pass in a const reference to CleanupUnusedNodes.
-				for (auto& Child : RootNode)
+				for (auto& Child : RootNode->ChildrenOctreeNodes)
 				{
 					CleanupUnusedNodes(Child, OpenSet);
 				}
